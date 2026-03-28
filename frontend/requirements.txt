@@ -1,0 +1,15 @@
+# Trading Bot UI — Python Dependencies
+flask>=3.0.0
+flask-cors>=4.0.0
+python-dotenv>=1.0.0
+
+# Africa's Talking SDK (SMS)
+africastalking>=1.2.7
+
+# Google API (Gmail OAuth2)
+google-api-python-client>=2.111.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.2.0
+
+# Optional: production server
+gunicorn>=21.2.0

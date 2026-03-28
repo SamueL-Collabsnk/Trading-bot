@@ -1,0 +1,2246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeBot — Market Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM — Dark Terminal / Trading Aesthetic
+   Fonts: Syne (display) + JetBrains Mono (data)
+   Palette: Deep navy + electric cyan + amber accents
+   ═══════════════════════════════════════════════ */
+:root {
+  --bg-void:     #050810;
+  --bg-deep:     #080d1a;
+  --bg-panel:    #0c1220;
+  --bg-card:     #0f1629;
+  --bg-elevated: #141d35;
+  --bg-hover:    #1a2540;
+
+  --border:      #1a2440;
+  --border-lit:  #243355;
+  --border-glow: #0e4f6e;
+
+  --cyan:        #00d4ff;
+  --cyan-dim:    #0099bb;
+  --cyan-glow:   rgba(0, 212, 255, 0.15);
+  --amber:       #f59e0b;
+  --amber-dim:   #d97706;
+  --green:       #10b981;
+  --green-dim:   #059669;
+  --red:         #ef4444;
+  --red-dim:     #dc2626;
+  --purple:      #8b5cf6;
+
+  --text-primary:   #e8f0ff;
+  --text-secondary: #7a8aaa;
+  --text-muted:     #3d4f6e;
+  --text-data:      #a8b8d8;
+
+  --font-display: 'Syne', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-ui:      'Space Mono', monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-panel: 0 4px 32px rgba(0,0,0,0.6);
+  --shadow-glow:  0 0 24px rgba(0, 212, 255, 0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 2px; }
+
+/* ─── VIEWS ─────────────────────────────────── */
+.view { display: none; min-height: 100vh; }
+.view.active { display: flex; }
+
+/* ═══════════════════════════════════════════════
+   AUTH PAGES
+   ═══════════════════════════════════════════════ */
+#auth-view {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated grid background */
+#auth-view::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridShift 20s linear infinite;
+  pointer-events: none;
+}
+
+/* Radial glow blobs */
+#auth-view::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 20% 50%, rgba(0, 212, 255, 0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 600px at 80% 30%, rgba(139, 92, 246, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+@keyframes gridShift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(40px, 40px); }
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Auth card */
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-panel), var(--shadow-glow);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top accent line */
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+}
+
+/* Corner decoration */
+.auth-card::after {
+  content: '';
+  position: absolute;
+  top: -1px; right: -1px;
+  width: 60px; height: 60px;
+  border-top: 2px solid var(--cyan-dim);
+  border-right: 2px solid var(--cyan-dim);
+  border-radius: 0 var(--radius-lg) 0 0;
+  opacity: 0.4;
+}
+
+/* Logo */
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.logo-icon {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.logo-text span { color: var(--cyan); }
+
+.auth-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.auth-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+  letter-spacing: 0.5px;
+}
+
+/* Form elements */
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+  border-color: var(--cyan-dim);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.08);
+}
+
+.form-input::placeholder { color: var(--text-muted); }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* OTP input group */
+.otp-inputs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.otp-digit {
+  width: 44px; height: 52px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.otp-digit:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px var(--cyan-glow);
+  background: var(--bg-hover);
+}
+
+/* Buttons */
+.btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--cyan-dim), #0066aa);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.2);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0, 212, 255, 0.3);
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+.btn-primary:disabled {
+  opacity: 0.5; cursor: not-allowed;
+  transform: none; box-shadow: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  padding: 8px;
+  margin-top: 8px;
+}
+
+.btn-ghost:hover { border-color: var(--border-lit); color: var(--text-primary); }
+
+/* Status messages */
+.status-msg {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  margin: 12px 0;
+  display: none;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.status-msg.show { display: flex; }
+.status-msg.error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; }
+.status-msg.success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; }
+.status-msg.info { background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.25); color: var(--cyan); }
+
+/* Auth switcher */
+.auth-switch {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 20px;
+}
+
+.auth-switch a {
+  color: var(--cyan);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.auth-switch a:hover { text-decoration: underline; }
+
+/* Step indicators */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 24px;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.step::before {
+  content: attr(data-n);
+  display: block;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  margin: 0 auto 4px;
+  line-height: 22px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.step.active::before {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--bg-deep);
+  box-shadow: 0 0 12px rgba(0,212,255,0.5);
+}
+
+.step.done::before {
+  content: '✓';
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.step-line {
+  flex: 0.5;
+  height: 1px;
+  background: var(--border);
+  margin-bottom: 16px;
+}
+
+/* Dev OTP hint */
+.dev-hint {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--amber);
+  margin-top: 8px;
+  display: none;
+}
+
+.dev-hint.show { display: block; }
+
+/* Spinner */
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════
+   MAIN TRADING DASHBOARD
+   ═══════════════════════════════════════════════ */
+#dashboard-view {
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Top navigation bar */
+.topbar {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.topbar-logo span { color: var(--cyan); }
+
+.topbar-logo .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.6; transform:scale(1.3); } }
+
+/* Symbol selector */
+.symbol-tabs {
+  display: flex; gap: 2px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.symbol-tab {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+  border: none; background: transparent;
+  font-family: var(--font-mono);
+}
+
+.symbol-tab.active {
+  background: var(--bg-hover);
+  color: var(--cyan);
+  box-shadow: 0 0 8px rgba(0,212,255,0.15);
+}
+
+/* Price ticker */
+.price-display {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-left: 4px;
+}
+
+.price-current {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  transition: color 0.3s;
+}
+
+.price-current.up { color: var(--green); }
+.price-current.down { color: var(--red); }
+
+.price-change {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.price-change.up { background: rgba(16,185,129,0.15); color: var(--green); }
+.price-change.down { background: rgba(239,68,68,0.15); color: var(--red); }
+
+.topbar-spacer { flex: 1; }
+
+/* Timeframe selector */
+.tf-selector {
+  display: flex; gap: 2px;
+}
+
+.tf-btn {
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+
+.tf-btn:hover { color: var(--text-secondary); border-color: var(--border); }
+.tf-btn.active { color: var(--cyan); border-color: var(--border-glow); background: rgba(0,212,255,0.06); }
+
+/* User avatar */
+.user-menu {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  transition: all 0.2s;
+}
+
+.user-menu:hover { border-color: var(--border-lit); }
+
+.user-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan-dim), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800;
+  color: #fff;
+}
+
+.user-name {
+  font-size: 11px; color: var(--text-secondary);
+  max-width: 80px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.logout-btn {
+  padding: 3px 8px;
+  font-size: 10px;
+  color: var(--red);
+  border: 1px solid rgba(239,68,68,0.2);
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: all 0.2s;
+}
+
+.logout-btn:hover { background: rgba(239,68,68,0.1); }
+
+/* ─── Dashboard layout ─────────────────────── */
+.dashboard-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ─── Chart area ────────────────────────────── */
+.chart-section {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  flex-shrink: 0;
+}
+
+.chart-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.chart-indicators {
+  display: flex; gap: 6px; margin-left: auto;
+}
+
+.indicator-tag {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.indicator-tag.ema { border: 1px solid rgba(245,158,11,0.4); color: var(--amber); }
+.indicator-tag.bb  { border: 1px solid rgba(139,92,246,0.4); color: var(--purple); }
+.indicator-tag.vol { border: 1px solid rgba(16,185,129,0.4); color: var(--green); }
+.indicator-tag.active { background: rgba(255,255,255,0.06); }
+
+/* Canvas wrapper */
+.chart-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-deep);
+  min-height: 340px;
+}
+
+#mainChart {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+/* Crosshair tooltip */
+.crosshair-tooltip {
+  position: absolute;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-lit);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 10px;
+  pointer-events: none;
+  display: none;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: var(--shadow-panel);
+}
+
+.crosshair-tooltip.visible { display: block; }
+
+.ct-row { display: flex; justify-content: space-between; gap: 12px; line-height: 1.7; }
+.ct-label { color: var(--text-secondary); }
+.ct-val { font-weight: 700; }
+.ct-val.up { color: var(--green); }
+.ct-val.down { color: var(--red); }
+
+/* Volume sub-chart */
+.volume-wrapper {
+  height: 60px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-void);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#volumeChart { width: 100%; height: 100%; display: block; }
+
+/* RSI sub-chart */
+.rsi-wrapper {
+  height: 80px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-void);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#rsiChart { width: 100%; height: 100%; display: block; }
+
+/* ─── Right panel ───────────────────────────── */
+.right-panel {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--bg-panel);
+}
+
+/* Panel sections */
+.panel-section {
+  border-bottom: 1px solid var(--border);
+  padding: 14px;
+}
+
+.panel-heading {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+.panel-heading::after {
+  content: '';
+  flex: 1; height: 1px;
+  background: var(--border);
+}
+
+/* OHLCV stat grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.stat-cell {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+.stat-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 2px;
+}
+
+.stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.stat-value.up { color: var(--green); }
+.stat-value.down { color: var(--red); }
+.stat-value.neutral { color: var(--text-primary); }
+
+/* Signal card */
+.signal-card {
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.signal-card.buy {
+  background: rgba(16,185,129,0.06);
+  border-color: rgba(16,185,129,0.2);
+}
+
+.signal-card.sell {
+  background: rgba(239,68,68,0.06);
+  border-color: rgba(239,68,68,0.2);
+}
+
+.signal-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+
+.signal-card.buy::before { background: var(--green); }
+.signal-card.sell::before { background: var(--red); }
+
+.signal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.signal-dir {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.signal-card.buy .signal-dir { color: var(--green); }
+.signal-card.sell .signal-dir { color: var(--red); }
+
+.signal-conf {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.signal-card.buy .signal-conf { background: rgba(16,185,129,0.15); color: var(--green); }
+.signal-card.sell .signal-conf { background: rgba(239,68,68,0.15); color: var(--red); }
+
+.signal-levels {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.sl-cell { text-align: center; }
+.sl-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.sl-val { font-size: 11px; font-weight: 700; }
+.sl-cell.entry .sl-val { color: var(--text-primary); }
+.sl-cell.sl .sl-val { color: var(--red); }
+.sl-cell.tp .sl-val { color: var(--green); }
+
+/* Confidence bar */
+.conf-bar-wrap { margin-top: 8px; }
+.conf-bar-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); margin-bottom: 3px; }
+.conf-bar-track { height: 3px; background: var(--bg-elevated); border-radius: 2px; }
+.conf-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+.signal-card.buy .conf-bar-fill { background: linear-gradient(90deg, var(--green-dim), var(--green)); }
+.signal-card.sell .conf-bar-fill { background: linear-gradient(90deg, var(--red-dim), var(--red)); }
+
+/* Structure tags */
+.structure-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.s-tag {
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.s-tag.bos-bull { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+.s-tag.bos-bear { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+.s-tag.choch    { background: rgba(245,158,11,0.12); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+.s-tag.fvg      { background: rgba(139,92,246,0.12); color: var(--purple); border: 1px solid rgba(139,92,246,0.25); }
+.s-tag.liq      { background: rgba(0,212,255,0.08); color: var(--cyan-dim); border: 1px solid rgba(0,212,255,0.2); }
+
+/* Market indicators mini */
+.indicator-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-size: 11px;
+}
+
+.indicator-row:last-child { border-bottom: none; }
+.ind-name { color: var(--text-secondary); }
+.ind-val { font-weight: 700; font-family: var(--font-display); }
+.ind-val.bullish { color: var(--green); }
+.ind-val.bearish { color: var(--red); }
+.ind-val.neutral { color: var(--amber); }
+
+/* Sentiment bar */
+.sentiment-gauge {
+  margin: 6px 0;
+  position: relative;
+}
+
+.sentiment-track {
+  height: 6px;
+  background: linear-gradient(90deg, var(--red), var(--amber) 50%, var(--green));
+  border-radius: 3px;
+  position: relative;
+}
+
+.sentiment-needle {
+  position: absolute;
+  top: -4px;
+  width: 2px; height: 14px;
+  background: #fff;
+  border-radius: 1px;
+  transform: translateX(-50%);
+  transition: left 1s ease;
+  box-shadow: 0 0 6px rgba(255,255,255,0.5);
+}
+
+/* News feed */
+.news-item {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.news-item:hover { opacity: 0.8; }
+.news-item:last-child { border-bottom: none; }
+.news-title { font-size: 11px; color: var(--text-data); line-height: 1.4; margin-bottom: 3px; }
+.news-meta { font-size: 9px; color: var(--text-muted); display: flex; gap: 8px; }
+
+.news-sentiment {
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.news-sentiment.bullish { background: rgba(16,185,129,0.15); color: var(--green); }
+.news-sentiment.bearish { background: rgba(239,68,68,0.15); color: var(--red); }
+.news-sentiment.neutral { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+/* Chart FVG overlays */
+.fvg-overlay {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.15;
+  border: 1px dashed;
+}
+
+.fvg-overlay.bull { background: var(--green); border-color: var(--green); }
+.fvg-overlay.bear { background: var(--red); border-color: var(--red); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .dashboard-body { grid-template-columns: 1fr; grid-template-rows: auto auto; }
+  .chart-section { grid-column: 1; grid-row: 1; }
+  .right-panel { grid-column: 1; grid-row: 2; max-height: 400px; }
+  .form-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .auth-card { padding: 24px; }
+  .symbol-tabs, .tf-selector { display: none; }
+  .price-current { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     AUTH VIEW
+     ═══════════════════════════════════════════════ -->
+<div id="auth-view" class="view active">
+  <div class="auth-container">
+
+    <!-- ── REGISTER PANEL ── -->
+    <div id="panel-register" class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">Trade<span>Bot</span></div>
+      </div>
+
+      <div class="steps" id="reg-steps">
+        <div class="step active" data-n="1">Details</div>
+        <div class="step-line"></div>
+        <div class="step" data-n="2">Verify Email</div>
+        <div class="step-line"></div>
+        <div class="step" data-n="3">Verify Phone</div>
+      </div>
+
+      <!-- Step 1: Details -->
+      <div id="reg-step1">
+        <div class="auth-title">Create Account</div>
+        <div class="auth-subtitle">Start trading with AI-powered signals</div>
+
+        <div id="reg-status" class="status-msg"></div>
+
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" id="reg-name" type="text" placeholder="John Kamau" autocomplete="name">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" id="reg-email" type="email" placeholder="john@example.com" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number (International)</label>
+          <input class="form-input" id="reg-phone" type="tel" placeholder="+254712345678" autocomplete="tel">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Password</label>
+            <input class="form-input" id="reg-pass" type="password" placeholder="Min 8 chars" autocomplete="new-password">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Confirm</label>
+            <input class="form-input" id="reg-pass2" type="password" placeholder="Repeat" autocomplete="new-password">
+          </div>
+        </div>
+
+        <br>
+        <button class="btn btn-primary" id="reg-btn" onclick="doRegister()">
+          <span class="spinner" id="reg-spin"></span>
+          Create Account
+        </button>
+
+        <div class="auth-switch">Already have an account? <a onclick="showPanel('login')">Sign In</a></div>
+      </div>
+
+      <!-- Step 2: Email OTP -->
+      <div id="reg-step2" style="display:none">
+        <div class="auth-title">Verify Email</div>
+        <div class="auth-subtitle" id="reg-email-hint">Enter the 6-digit code sent to your email</div>
+
+        <div id="email-otp-status" class="status-msg"></div>
+        <div id="email-dev-hint" class="dev-hint"></div>
+
+        <div class="otp-inputs" id="email-otp-inputs">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+        </div>
+
+        <button class="btn btn-primary" onclick="verifyEmailOTP()">
+          <span class="spinner" id="email-otp-spin"></span>
+          Verify Email
+        </button>
+        <button class="btn btn-ghost" onclick="resendOTP('email')">Resend Code</button>
+      </div>
+
+      <!-- Step 3: Phone OTP -->
+      <div id="reg-step3" style="display:none">
+        <div class="auth-title">Verify Phone</div>
+        <div class="auth-subtitle" id="reg-phone-hint">Enter the 6-digit code sent via SMS</div>
+
+        <div id="phone-otp-status" class="status-msg"></div>
+        <div id="phone-dev-hint" class="dev-hint"></div>
+
+        <div class="otp-inputs" id="phone-otp-inputs">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+        </div>
+
+        <button class="btn btn-primary" onclick="verifyPhoneOTP()">
+          <span class="spinner" id="phone-otp-spin"></span>
+          Verify Phone & Continue
+        </button>
+        <button class="btn btn-ghost" onclick="resendOTP('sms')">Resend SMS</button>
+        <button class="btn btn-ghost" onclick="skipPhoneVerify()">Skip for now →</button>
+      </div>
+    </div>
+
+    <!-- ── LOGIN PANEL ── -->
+    <div id="panel-login" class="auth-card" style="display:none">
+      <div class="auth-logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">Trade<span>Bot</span></div>
+      </div>
+
+      <!-- Step A: Credentials -->
+      <div id="login-step1">
+        <div class="auth-title">Welcome Back</div>
+        <div class="auth-subtitle">Sign in to your trading account</div>
+
+        <div id="login-status" class="status-msg"></div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" id="login-email" type="email" placeholder="john@example.com" autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="login-pass" type="password" placeholder="Your password" autocomplete="current-password">
+        </div>
+
+        <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
+          <span class="spinner" id="login-spin"></span>
+          Sign In
+        </button>
+
+        <div class="auth-switch">No account? <a onclick="showPanel('register')">Create one free</a></div>
+      </div>
+
+      <!-- Step B: 2FA OTP -->
+      <div id="login-step2" style="display:none">
+        <div class="auth-title">Two-Factor Auth</div>
+        <div class="auth-subtitle" id="login-2fa-hint">Enter the 6-digit code sent to your email</div>
+
+        <div id="login-2fa-status" class="status-msg"></div>
+        <div id="login-dev-hint" class="dev-hint"></div>
+
+        <div class="otp-inputs" id="login-otp-inputs">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+          <input class="otp-digit" maxlength="1" type="text" inputmode="numeric">
+        </div>
+
+        <button class="btn btn-primary" onclick="verifyLogin2FA()">
+          <span class="spinner" id="login-2fa-spin"></span>
+          Verify & Enter
+        </button>
+        <button class="btn btn-ghost" onclick="resendLoginOTP()">Resend Code</button>
+      </div>
+    </div>
+
+  </div><!-- /auth-container -->
+</div><!-- /auth-view -->
+
+
+<!-- ═══════════════════════════════════════════════
+     DASHBOARD VIEW
+     ═══════════════════════════════════════════════ -->
+<div id="dashboard-view" class="view">
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="dot"></div>
+      Trade<span>Bot</span>
+    </div>
+
+    <div class="symbol-tabs" id="symbolTabs">
+      <button class="symbol-tab active" onclick="changeSymbol('BTCUSDT',this)">BTC/USDT</button>
+      <button class="symbol-tab" onclick="changeSymbol('EURUSD',this)">EUR/USD</button>
+      <button class="symbol-tab" onclick="changeSymbol('GBPUSD',this)">GBP/USD</button>
+      <button class="symbol-tab" onclick="changeSymbol('ETHUSD',this)">ETH/USD</button>
+    </div>
+
+    <div class="price-display">
+      <div class="price-current" id="livePrice">—</div>
+      <div class="price-change" id="priceChange">—</div>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="tf-selector">
+      <button class="tf-btn" onclick="changeTF('M15',this)">15M</button>
+      <button class="tf-btn" onclick="changeTF('M30',this)">30M</button>
+      <button class="tf-btn active" onclick="changeTF('H1',this)">1H</button>
+      <button class="tf-btn" onclick="changeTF('H4',this)">4H</button>
+      <button class="tf-btn" onclick="changeTF('D1',this)">1D</button>
+    </div>
+
+    <div class="user-menu" id="userMenu">
+      <div class="user-avatar" id="userAvatar">—</div>
+      <div class="user-name" id="userNameDisplay">—</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Exit</button>
+  </div>
+
+  <!-- Main Body -->
+  <div class="dashboard-body">
+
+    <!-- ─── Chart Section ─────────────────────── -->
+    <div class="chart-section">
+      <div class="chart-toolbar">
+        <div class="chart-title" id="chartTitle">BTC/USDT · 1H</div>
+        <div class="chart-indicators">
+          <div class="indicator-tag ema active" id="tag-ema" onclick="toggleIndicator('ema')">EMA 20/50</div>
+          <div class="indicator-tag bb" id="tag-bb" onclick="toggleIndicator('bb')">Bollinger</div>
+          <div class="indicator-tag vol active" id="tag-vol" onclick="toggleIndicator('vol')">Volume</div>
+        </div>
+      </div>
+
+      <div class="chart-wrapper">
+        <canvas id="mainChart"></canvas>
+        <div class="crosshair-tooltip" id="crosshairTip">
+          <div class="ct-row"><span class="ct-label">O</span><span class="ct-val" id="ct-o">—</span></div>
+          <div class="ct-row"><span class="ct-label">H</span><span class="ct-val ct-up" id="ct-h">—</span></div>
+          <div class="ct-row"><span class="ct-label">L</span><span class="ct-val ct-down" id="ct-l">—</span></div>
+          <div class="ct-row"><span class="ct-label">C</span><span class="ct-val" id="ct-c">—</span></div>
+          <div class="ct-row"><span class="ct-label">Vol</span><span class="ct-val" id="ct-v">—</span></div>
+        </div>
+      </div>
+
+      <div class="volume-wrapper">
+        <canvas id="volumeChart"></canvas>
+      </div>
+
+      <div class="rsi-wrapper">
+        <canvas id="rsiChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ─── Right Panel ────────────────────────── -->
+    <div class="right-panel">
+
+      <!-- OHLCV Stats -->
+      <div class="panel-section">
+        <div class="panel-heading">OHLCV</div>
+        <div class="stat-grid">
+          <div class="stat-cell"><div class="stat-label">Open</div><div class="stat-value neutral" id="stat-open">—</div></div>
+          <div class="stat-cell"><div class="stat-label">High</div><div class="stat-value up" id="stat-high">—</div></div>
+          <div class="stat-cell"><div class="stat-label">Low</div><div class="stat-value down" id="stat-low">—</div></div>
+          <div class="stat-cell"><div class="stat-label">Close</div><div class="stat-value neutral" id="stat-close">—</div></div>
+          <div class="stat-cell"><div class="stat-label">Volume</div><div class="stat-value neutral" id="stat-vol">—</div></div>
+          <div class="stat-cell"><div class="stat-label">Change</div><div class="stat-value" id="stat-chg">—</div></div>
+        </div>
+      </div>
+
+      <!-- Active Signal -->
+      <div class="panel-section">
+        <div class="panel-heading">Signal</div>
+        <div id="signal-container">
+          <div style="color:var(--text-muted);font-size:11px;padding:8px 0;text-align:center">
+            Analysing market structure...
+          </div>
+        </div>
+      </div>
+
+      <!-- Market Structure -->
+      <div class="panel-section">
+        <div class="panel-heading">Structure</div>
+        <div class="structure-tags" id="structure-tags">
+          <div class="s-tag fvg">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Technical Indicators -->
+      <div class="panel-section">
+        <div class="panel-heading">Indicators</div>
+        <div class="indicator-row"><span class="ind-name">RSI (14)</span><span class="ind-val" id="ind-rsi">—</span></div>
+        <div class="indicator-row"><span class="ind-name">ATR (14)</span><span class="ind-val neutral" id="ind-atr">—</span></div>
+        <div class="indicator-row"><span class="ind-name">ADX (14)</span><span class="ind-val" id="ind-adx">—</span></div>
+        <div class="indicator-row"><span class="ind-name">EMA 20</span><span class="ind-val" id="ind-ema20">—</span></div>
+        <div class="indicator-row"><span class="ind-name">EMA 50</span><span class="ind-val" id="ind-ema50">—</span></div>
+        <div class="indicator-row"><span class="ind-name">Trend Bias</span><span class="ind-val" id="ind-trend">—</span></div>
+      </div>
+
+      <!-- Sentiment -->
+      <div class="panel-section">
+        <div class="panel-heading">Sentiment</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11px;color:var(--text-secondary)">Market Mood</span>
+          <span style="font-size:12px;font-weight:700;font-family:var(--font-display)" id="sentiment-label">Neutral</span>
+        </div>
+        <div class="sentiment-gauge">
+          <div class="sentiment-track">
+            <div class="sentiment-needle" id="sentiment-needle" style="left:50%"></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-muted);margin-top:3px">
+          <span>Bearish</span><span>Neutral</span><span>Bullish</span>
+        </div>
+      </div>
+
+      <!-- News -->
+      <div class="panel-section">
+        <div class="panel-heading">Market News</div>
+        <div id="news-feed">
+          <div class="news-item">
+            <div class="news-title">Fed signals cautious approach to rate cuts amid inflation concerns</div>
+            <div class="news-meta"><span>Reuters</span><span>2h ago</span><span class="news-sentiment bearish">Bearish</span></div>
+          </div>
+          <div class="news-item">
+            <div class="news-title">Bitcoin ETF inflows reach record high as institutional demand surges</div>
+            <div class="news-meta"><span>Bloomberg</span><span>4h ago</span><span class="news-sentiment bullish">Bullish</span></div>
+          </div>
+          <div class="news-item">
+            <div class="news-title">EUR/USD holds steady ahead of ECB policy meeting</div>
+            <div class="news-meta"><span>ForexLive</span><span>6h ago</span><span class="news-sentiment neutral">Neutral</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /right-panel -->
+  </div><!-- /dashboard-body -->
+</div><!-- /dashboard-view -->
+
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const API = 'http://localhost:5000/api';  // Change to your server URL
+let state = {
+  token: localStorage.getItem('tb_token'),
+  user: null,
+  symbol: 'BTCUSDT',
+  timeframe: 'H1',
+  chartData: [],
+  currentBar: null,
+  showEMA: true,
+  showBB: false,
+  showVol: true,
+  chartOffset: 0,   // pan offset in bars
+  zoom: 1.0,
+  regUserId: null,
+  regEmail: '',
+  regPhone: '',
+  loginEmail: '',
+};
+
+// ═══════════════════════════════════════════════
+// AUTH UTILITIES
+// ═══════════════════════════════════════════════
+function showPanel(name) {
+  document.getElementById('panel-register').style.display = name === 'register' ? '' : 'none';
+  document.getElementById('panel-login').style.display = name === 'login' ? '' : 'none';
+}
+
+function setStatus(id, msg, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = `status-msg ${type} show`;
+  el.innerHTML = (type === 'error' ? '⚠ ' : type === 'success' ? '✓ ' : 'ℹ ') + msg;
+}
+
+function clearStatus(id) {
+  const el = document.getElementById(id);
+  if (el) { el.className = 'status-msg'; el.innerHTML = ''; }
+}
+
+function setLoading(btnId, spinId, loading) {
+  const btn = document.getElementById(btnId);
+  const sp  = document.getElementById(spinId);
+  if (btn) btn.disabled = loading;
+  if (sp)  sp.style.display = loading ? 'block' : 'none';
+}
+
+function showDevHint(elId, otp) {
+  const el = document.getElementById(elId);
+  if (el) { el.className = 'dev-hint show'; el.textContent = `⚡ DEV MODE — OTP: ${otp}`; }
+}
+
+// OTP input auto-advance
+function initOTPInputs(containerId) {
+  const inputs = document.querySelectorAll(`#${containerId} .otp-digit`);
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', e => {
+      const val = inp.value.replace(/\D/g, '');
+      inp.value = val;
+      if (val && i < inputs.length - 1) inputs[i + 1].focus();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i - 1].focus();
+    });
+    inp.addEventListener('paste', e => {
+      const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+      inputs.forEach((inp2, j) => { inp2.value = paste[j] || ''; });
+      if (paste.length >= inputs.length) inputs[inputs.length-1].focus();
+      e.preventDefault();
+    });
+  });
+}
+
+function getOTPValue(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} .otp-digit`))
+    .map(i => i.value).join('');
+}
+
+function clearOTPInputs(containerId) {
+  document.querySelectorAll(`#${containerId} .otp-digit`).forEach(i => { i.value = ''; });
+  const first = document.querySelector(`#${containerId} .otp-digit`);
+  if (first) first.focus();
+}
+
+function advanceRegStep(step) {
+  const steps = document.querySelectorAll('#reg-steps .step');
+  steps.forEach((s, i) => {
+    if (i < step - 1) { s.classList.remove('active'); s.classList.add('done'); }
+    else if (i === step - 1) { s.classList.add('active'); s.classList.remove('done'); }
+    else { s.classList.remove('active', 'done'); }
+  });
+  ['reg-step1','reg-step2','reg-step3'].forEach((id, i) => {
+    document.getElementById(id).style.display = (i === step - 1) ? '' : 'none';
+  });
+}
+
+// ═══════════════════════════════════════════════
+// API CALLS
+// ═══════════════════════════════════════════════
+async function apiPost(endpoint, body, token) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const r = await fetch(`${API}${endpoint}`, { method:'POST', headers, body: JSON.stringify(body) });
+  const data = await r.json();
+  return { ok: r.ok, status: r.status, data };
+}
+
+async function apiGet(endpoint, token) {
+  const r = await fetch(`${API}${endpoint}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await r.json();
+  return { ok: r.ok, data };
+}
+
+// ─── REGISTER ──────────────────────────────────
+async function doRegister() {
+  clearStatus('reg-status');
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const pass  = document.getElementById('reg-pass').value;
+  const pass2 = document.getElementById('reg-pass2').value;
+
+  if (!name || !email || !phone || !pass) return setStatus('reg-status', 'All fields are required.', 'error');
+  if (pass !== pass2) return setStatus('reg-status', 'Passwords do not match.', 'error');
+  if (pass.length < 8) return setStatus('reg-status', 'Password must be at least 8 characters.', 'error');
+
+  setLoading('reg-btn', 'reg-spin', true);
+  try {
+    const { ok, data } = await apiPost('/auth/register', { fullName:name, email, phone, password:pass });
+    if (!ok) return setStatus('reg-status', data.error || 'Registration failed.', 'error');
+
+    state.regUserId = data.userId;
+    state.regEmail  = email;
+    state.regPhone  = phone;
+
+    // Show dev OTP hints
+    if (data.email_otp_dev) showDevHint('email-dev-hint', data.email_otp_dev);
+
+    document.getElementById('reg-email-hint').textContent = `Code sent to ${email}`;
+    document.getElementById('reg-phone-hint').textContent = `Code sent to ${phone}`;
+
+    advanceRegStep(2);
+    initOTPInputs('email-otp-inputs');
+    setTimeout(() => document.querySelector('#email-otp-inputs .otp-digit').focus(), 100);
+  } catch(e) {
+    setStatus('reg-status', 'Network error. Make sure the server is running.', 'error');
+  } finally {
+    setLoading('reg-btn', 'reg-spin', false);
+  }
+}
+
+// ─── VERIFY EMAIL OTP ──────────────────────────
+async function verifyEmailOTP() {
+  const code = getOTPValue('email-otp-inputs');
+  if (code.length < 6) return setStatus('email-otp-status', 'Enter all 6 digits.', 'error');
+
+  setLoading(null, 'email-otp-spin', true);
+  document.querySelector('#reg-step2 .btn-primary').disabled = true;
+  try {
+    const { ok, data } = await apiPost('/auth/verify-email', { email: state.regEmail, code });
+    if (!ok) {
+      setStatus('email-otp-status', data.error || 'Verification failed.', 'error');
+      clearOTPInputs('email-otp-inputs');
+      return;
+    }
+    setStatus('email-otp-status', 'Email verified!', 'success');
+    setTimeout(() => {
+      clearStatus('email-otp-status');
+      // Now advance to phone verification
+      advanceRegStep(3);
+      initOTPInputs('phone-otp-inputs');
+      // Trigger SMS OTP resend for phone (already sent at register)
+      apiPost('/auth/resend-otp', { contact: state.regPhone, channel: 'sms' }).then(r => {
+        if (r.data.sms_otp_dev) showDevHint('phone-dev-hint', r.data.sms_otp_dev);
+      });
+      setTimeout(() => document.querySelector('#phone-otp-inputs .otp-digit').focus(), 100);
+    }, 800);
+  } catch(e) {
+    setStatus('email-otp-status', 'Network error.', 'error');
+  } finally {
+    setLoading(null, 'email-otp-spin', false);
+    document.querySelector('#reg-step2 .btn-primary').disabled = false;
+  }
+}
+
+// ─── VERIFY PHONE OTP ──────────────────────────
+async function verifyPhoneOTP() {
+  const code = getOTPValue('phone-otp-inputs');
+  if (code.length < 6) return setStatus('phone-otp-status', 'Enter all 6 digits.', 'error');
+
+  setLoading(null, 'phone-otp-spin', true);
+  document.querySelector('#reg-step3 .btn-primary').disabled = true;
+  try {
+    const { ok, data } = await apiPost('/auth/verify-phone', { phone: state.regPhone, code });
+    if (!ok) {
+      setStatus('phone-otp-status', data.error || 'Verification failed.', 'error');
+      clearOTPInputs('phone-otp-inputs');
+      return;
+    }
+    setStatus('phone-otp-status', '✓ Phone verified! Redirecting to login...', 'success');
+    setTimeout(() => {
+      showPanel('login');
+      setStatus('login-status', '✓ Account created! Please sign in.', 'success');
+    }, 1500);
+  } catch(e) {
+    setStatus('phone-otp-status', 'Network error.', 'error');
+  } finally {
+    setLoading(null, 'phone-otp-spin', false);
+    document.querySelector('#reg-step3 .btn-primary').disabled = false;
+  }
+}
+
+function skipPhoneVerify() {
+  showPanel('login');
+  setStatus('login-status', '✓ Account created (phone unverified). Sign in below.', 'info');
+}
+
+// ─── RESEND OTP ────────────────────────────────
+async function resendOTP(channel) {
+  const contact = channel === 'email' ? state.regEmail : state.regPhone;
+  const { ok, data } = await apiPost('/auth/resend-otp', { contact, channel: channel === 'email' ? 'email' : 'sms' });
+  if (ok) {
+    const hintId = channel === 'email' ? 'email-dev-hint' : 'phone-dev-hint';
+    const statusId = channel === 'email' ? 'email-otp-status' : 'phone-otp-status';
+    if (data.email_otp_dev) showDevHint(hintId, data.email_otp_dev);
+    if (data.sms_otp_dev)   showDevHint(hintId, data.sms_otp_dev);
+    setStatus(statusId, 'New code sent.', 'info');
+  }
+}
+
+// ─── LOGIN ─────────────────────────────────────
+async function doLogin() {
+  clearStatus('login-status');
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+
+  if (!email || !pass) return setStatus('login-status', 'Enter your email and password.', 'error');
+
+  setLoading('login-btn', 'login-spin', true);
+  try {
+    const { ok, data } = await apiPost('/auth/login', { email, password: pass });
+    if (!ok) {
+      setStatus('login-status', data.error || 'Login failed.', 'error');
+      return;
+    }
+    state.loginEmail = email;
+
+    if (data.login_otp_dev) showDevHint('login-dev-hint', data.login_otp_dev);
+
+    document.getElementById('login-2fa-hint').textContent = `Code sent to ${email}`;
+    document.getElementById('login-step1').style.display = 'none';
+    document.getElementById('login-step2').style.display = '';
+    initOTPInputs('login-otp-inputs');
+    setTimeout(() => document.querySelector('#login-otp-inputs .otp-digit').focus(), 100);
+  } catch(e) {
+    setStatus('login-status', 'Network error. Make sure the server is running.', 'error');
+  } finally {
+    setLoading('login-btn', 'login-spin', false);
+  }
+}
+
+// ─── LOGIN 2FA ─────────────────────────────────
+async function verifyLogin2FA() {
+  const code = getOTPValue('login-otp-inputs');
+  if (code.length < 6) return setStatus('login-2fa-status', 'Enter all 6 digits.', 'error');
+
+  setLoading(null, 'login-2fa-spin', true);
+  document.querySelector('#login-step2 .btn-primary').disabled = true;
+  try {
+    const { ok, data } = await apiPost('/auth/login-verify', { email: state.loginEmail, code });
+    if (!ok) {
+      setStatus('login-2fa-status', data.error || 'Verification failed.', 'error');
+      clearOTPInputs('login-otp-inputs');
+      return;
+    }
+    // Store token + user
+    state.token = data.token;
+    state.user  = data.user;
+    localStorage.setItem('tb_token', data.token);
+    localStorage.setItem('tb_user', JSON.stringify(data.user));
+    enterDashboard();
+  } catch(e) {
+    setStatus('login-2fa-status', 'Network error.', 'error');
+  } finally {
+    setLoading(null, 'login-2fa-spin', false);
+    const btn = document.querySelector('#login-step2 .btn-primary');
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function resendLoginOTP() {
+  const { ok, data } = await apiPost('/auth/resend-otp', { contact: state.loginEmail, channel: 'email' });
+  if (ok) {
+    if (data.email_otp_dev) showDevHint('login-dev-hint', data.email_otp_dev);
+    setStatus('login-2fa-status', 'New code sent.', 'info');
+  }
+}
+
+// ─── LOGOUT ────────────────────────────────────
+function doLogout() {
+  state.token = null; state.user = null;
+  localStorage.removeItem('tb_token');
+  localStorage.removeItem('tb_user');
+  clearInterval(state.tickerInterval);
+  clearInterval(state.updateInterval);
+  document.getElementById('dashboard-view').classList.remove('active');
+  document.getElementById('auth-view').classList.add('active');
+  showPanel('login');
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+async function enterDashboard() {
+  const user = state.user || JSON.parse(localStorage.getItem('tb_user') || '{}');
+  if (!user.fullName) { doLogout(); return; }
+
+  document.getElementById('auth-view').classList.remove('active');
+  document.getElementById('dashboard-view').classList.add('active');
+
+  // Set user display
+  document.getElementById('userAvatar').textContent = user.fullName.charAt(0).toUpperCase();
+  document.getElementById('userNameDisplay').textContent = user.fullName.split(' ')[0];
+
+  await loadChartData();
+  startLiveTicker();
+  renderStructurePanel();
+  renderSignalPanel();
+}
+
+// ─── Chart data fetch ──────────────────────────
+async function loadChartData() {
+  try {
+    const { ok, data } = await apiGet(
+      `/market/ohlcv?symbol=${state.symbol}&bars=100`, state.token
+    );
+    if (ok) {
+      state.chartData = data.data;
+      state.currentBar = state.chartData[state.chartData.length - 1];
+      renderChart();
+      updateOHLCVStats();
+      updateIndicators();
+    }
+  } catch(e) {
+    // If backend not running, use mock data directly
+    state.chartData = generateLocalMockData(state.symbol, 100);
+    state.currentBar = state.chartData[state.chartData.length - 1];
+    renderChart();
+    updateOHLCVStats();
+    updateIndicators();
+  }
+}
+
+// Local mock data generator (no server needed for demo)
+function generateLocalMockData(symbol, bars) {
+  const seed = symbol === 'BTCUSDT' ? 43500 : symbol === 'EURUSD' ? 1.085 : 1.265;
+  const vol  = symbol === 'BTCUSDT' ? 0.008 : 0.0006;
+  let price = seed, data = [], now = Math.floor(Date.now()/1000);
+  for (let i = 0; i < bars; i++) {
+    const chg = (Math.random() - 0.49) * seed * vol;
+    const o = price, c = price + chg;
+    const h = Math.max(o, c) + Math.abs(Math.random() * seed * 0.003);
+    const l = Math.min(o, c) - Math.abs(Math.random() * seed * 0.003);
+    data.push({ time: now - (bars-i)*3600, open:+o.toFixed(4), high:+h.toFixed(4),
+                low:+l.toFixed(4), close:+c.toFixed(4), volume:+(Math.random()*2000+200).toFixed(0) });
+    price = c;
+  }
+  return data;
+}
+
+// ─── LIVE TICKER ───────────────────────────────
+function startLiveTicker() {
+  clearInterval(state.tickerInterval);
+  state.tickerInterval = setInterval(() => {
+    if (!state.chartData.length) return;
+    const last = state.chartData[state.chartData.length - 1];
+    const factor = state.symbol === 'BTCUSDT' ? 0.0008 : 0.00008;
+    const newClose = last.close * (1 + (Math.random() - 0.5) * factor);
+    const prev = state.chartData[state.chartData.length - 2]?.close || last.open;
+
+    // Update current bar close
+    state.chartData[state.chartData.length - 1].close = +newClose.toFixed(4);
+    state.chartData[state.chartData.length - 1].high  = Math.max(last.high, newClose);
+    state.chartData[state.chartData.length - 1].low   = Math.min(last.low, newClose);
+
+    const priceEl  = document.getElementById('livePrice');
+    const changeEl = document.getElementById('priceChange');
+    const changePct = ((newClose - prev) / prev * 100);
+
+    const formatted = state.symbol === 'BTCUSDT'
+      ? newClose.toFixed(2) : newClose.toFixed(4);
+
+    priceEl.textContent = formatted;
+    priceEl.className = 'price-current ' + (changePct >= 0 ? 'up' : 'down');
+    changeEl.textContent = (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '%';
+    changeEl.className = 'price-change ' + (changePct >= 0 ? 'up' : 'down');
+
+    renderChart();
+    updateOHLCVStats();
+  }, 2000);
+}
+
+function changeSymbol(sym, btn) {
+  state.symbol = sym;
+  document.querySelectorAll('.symbol-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('chartTitle').textContent = `${sym.replace('USDT','').replace('USD','')} · ${state.timeframe}`;
+  loadChartData();
+}
+
+function changeTF(tf, btn) {
+  state.timeframe = tf;
+  document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('chartTitle').textContent = `${state.symbol} · ${tf}`;
+  loadChartData();
+}
+
+function toggleIndicator(name) {
+  if (name === 'ema') state.showEMA = !state.showEMA;
+  if (name === 'bb')  state.showBB  = !state.showBB;
+  if (name === 'vol') state.showVol = !state.showVol;
+  document.getElementById(`tag-${name}`).classList.toggle('active');
+  renderChart();
+}
+
+// ─── OHLCV STATS ───────────────────────────────
+function updateOHLCVStats() {
+  const bar = state.chartData[state.chartData.length - 1];
+  if (!bar) return;
+  const chgPct = ((bar.close - bar.open) / bar.open * 100);
+  const fmt = v => state.symbol === 'BTCUSDT' ? v.toFixed(2) : v.toFixed(4);
+
+  document.getElementById('stat-open').textContent  = fmt(bar.open);
+  document.getElementById('stat-high').textContent  = fmt(bar.high);
+  document.getElementById('stat-low').textContent   = fmt(bar.low);
+  document.getElementById('stat-close').textContent = fmt(bar.close);
+  document.getElementById('stat-vol').textContent   = bar.volume.toLocaleString();
+
+  const chgEl = document.getElementById('stat-chg');
+  chgEl.textContent = (chgPct >= 0 ? '+' : '') + chgPct.toFixed(2) + '%';
+  chgEl.className = 'stat-value ' + (chgPct >= 0 ? 'up' : 'down');
+}
+
+// ─── INDICATORS ────────────────────────────────
+function calcEMA(closes, period) {
+  const k = 2 / (period + 1);
+  let ema = closes[0];
+  return closes.map(c => (ema = c * k + ema * (1 - k)));
+}
+
+function calcRSI(closes, period = 14) {
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const d = closes[i] - closes[i-1];
+    if (d > 0) gains += d; else losses -= d;
+  }
+  gains /= period; losses /= period;
+  for (let i = period + 1; i < closes.length; i++) {
+    const d = closes[i] - closes[i-1];
+    gains  = (gains  * (period-1) + Math.max(d, 0)) / period;
+    losses = (losses * (period-1) + Math.max(-d, 0)) / period;
+  }
+  return losses === 0 ? 100 : 100 - 100 / (1 + gains / losses);
+}
+
+function updateIndicators() {
+  if (state.chartData.length < 50) return;
+  const closes = state.chartData.map(d => d.close);
+  const rsi = calcRSI(closes);
+  const ema20 = calcEMA(closes, 20);
+  const ema50 = calcEMA(closes, 50);
+  const last  = closes[closes.length - 1];
+  const lastEMA20 = ema20[ema20.length - 1];
+  const lastEMA50 = ema50[ema50.length - 1];
+
+  // ATR approximation
+  const atrs = state.chartData.slice(-15).map((d,i,arr) => {
+    if (i === 0) return d.high - d.low;
+    return Math.max(d.high - d.low, Math.abs(d.high - arr[i-1].close), Math.abs(d.low - arr[i-1].close));
+  });
+  const atr = atrs.reduce((a,b) => a+b, 0) / atrs.length;
+
+  // ADX approximation (simplified)
+  const adx = Math.min(90, Math.max(10, 20 + (Math.abs(rsi - 50) * 0.6)));
+  const trend = lastEMA20 > lastEMA50 ? 'BULLISH' : 'BEARISH';
+
+  const rsiEl = document.getElementById('ind-rsi');
+  rsiEl.textContent = rsi.toFixed(1);
+  rsiEl.className = 'ind-val ' + (rsi > 60 ? 'bullish' : rsi < 40 ? 'bearish' : 'neutral');
+
+  const fmt = v => state.symbol === 'BTCUSDT' ? v.toFixed(1) : v.toFixed(5);
+  document.getElementById('ind-atr').textContent = fmt(atr);
+
+  const adxEl = document.getElementById('ind-adx');
+  adxEl.textContent = adx.toFixed(0);
+  adxEl.className = 'ind-val ' + (adx > 25 ? 'bullish' : 'neutral');
+
+  document.getElementById('ind-ema20').textContent = fmt(lastEMA20);
+  document.getElementById('ind-ema50').textContent = fmt(lastEMA50);
+
+  const trendEl = document.getElementById('ind-trend');
+  trendEl.textContent = trend;
+  trendEl.className = 'ind-val ' + (trend === 'BULLISH' ? 'bullish' : 'bearish');
+
+  // Sentiment needle
+  const sentimentScore = (rsi - 50) / 50;  // -1 to 1
+  const needlePct = Math.min(95, Math.max(5, (sentimentScore + 1) / 2 * 100));
+  document.getElementById('sentiment-needle').style.left = needlePct + '%';
+  const sentimentLabel = sentimentScore > 0.2 ? 'Bullish' : sentimentScore < -0.2 ? 'Bearish' : 'Neutral';
+  const sentimentColors = { Bullish: 'var(--green)', Bearish: 'var(--red)', Neutral: 'var(--amber)' };
+  const sentLabelEl = document.getElementById('sentiment-label');
+  sentLabelEl.textContent = sentimentLabel;
+  sentLabelEl.style.color = sentimentColors[sentimentLabel];
+}
+
+// ─── MARKET STRUCTURE ──────────────────────────
+function renderStructurePanel() {
+  const data = state.chartData;
+  if (data.length < 20) return;
+
+  const closes  = data.map(d => d.close);
+  const highs   = data.map(d => d.high);
+  const lows    = data.map(d => d.low);
+  const last    = closes[closes.length - 1];
+  const ema20   = calcEMA(closes, 20);
+  const ema50   = calcEMA(closes, 50);
+  const trend   = ema20[ema20.length-1] > ema50[ema50.length-1] ? 'bull' : 'bear';
+
+  // Detect swing highs/lows (simplified N=3 lookback)
+  const N = 3;
+  let swingHighs = [], swingLows = [];
+  for (let i = N; i < data.length - N; i++) {
+    const wh = highs.slice(i-N, i+N+1);
+    const wl = lows.slice(i-N, i+N+1);
+    if (highs[i] === Math.max(...wh)) swingHighs.push({ i, price: highs[i] });
+    if (lows[i]  === Math.min(...wl)) swingLows.push({ i, price: lows[i] });
+  }
+
+  // Detect BOS
+  const lastHigh = swingHighs[swingHighs.length - 1];
+  const lastLow  = swingLows[swingLows.length - 1];
+  const bosBull  = lastHigh && last > lastHigh.price;
+  const bosBear  = lastLow  && last < lastLow.price;
+
+  // Detect FVG (last 10 bars)
+  let fvgBull = 0, fvgBear = 0;
+  for (let i = 1; i < data.length - 1; i++) {
+    if (lows[i+1] > highs[i-1]) fvgBull++;
+    if (highs[i+1] < lows[i-1]) fvgBear++;
+  }
+
+  // Detect CHoCH (simplified)
+  const choch = trend === 'bull' && bosBear || trend === 'bear' && bosBull;
+
+  const container = document.getElementById('structure-tags');
+  const tags = [];
+  if (bosBull) tags.push('<div class="s-tag bos-bull">BOS ↑</div>');
+  if (bosBear) tags.push('<div class="s-tag bos-bear">BOS ↓</div>');
+  if (choch)   tags.push('<div class="s-tag choch">CHoCH</div>');
+  if (fvgBull) tags.push(`<div class="s-tag fvg">FVG Bull ×${Math.min(fvgBull,9)}</div>`);
+  if (fvgBear) tags.push(`<div class="s-tag fvg">FVG Bear ×${Math.min(fvgBear,9)}</div>`);
+  if (swingHighs.length) tags.push('<div class="s-tag liq">Liq Zone</div>');
+  tags.push(`<div class="s-tag ${trend === 'bull' ? 'bos-bull' : 'bos-bear'}">${trend === 'bull' ? 'HH/HL' : 'LH/LL'}</div>`);
+
+  container.innerHTML = tags.join('');
+  renderSignalPanel();
+}
+
+// ─── SIGNAL PANEL ──────────────────────────────
+function renderSignalPanel() {
+  const data = state.chartData;
+  if (data.length < 30) return;
+
+  const closes = data.map(d => d.close);
+  const rsi    = calcRSI(closes);
+  const ema20  = calcEMA(closes, 20);
+  const ema50  = calcEMA(closes, 50);
+  const last   = closes[closes.length - 1];
+  const lastBar = data[data.length - 1];
+  const atrs   = data.slice(-14).map((d,i,arr) => i === 0 ? d.high-d.low : Math.max(d.high-d.low, Math.abs(d.high-arr[i-1].close), Math.abs(d.low-arr[i-1].close)));
+  const atr    = atrs.reduce((a,b)=>a+b,0)/atrs.length;
+
+  const trend  = ema20[ema20.length-1] > ema50[ema50.length-1];
+  const isBuy  = trend && rsi < 65 && rsi > 35;
+  const isSell = !trend && rsi > 35 && rsi < 65;
+
+  if (!isBuy && !isSell) {
+    document.getElementById('signal-container').innerHTML =
+      '<div style="color:var(--text-muted);font-size:11px;padding:8px 0;text-align:center">No high-confidence setup</div>';
+    return;
+  }
+
+  const dir = isBuy ? 'buy' : 'sell';
+  const entry = last;
+  const sl    = isBuy ? last - atr * 1.5 : last + atr * 1.5;
+  const tp    = isBuy ? last + atr * 3.0 : last - atr * 3.0;
+  const rr    = 2.0;
+  const conf  = Math.min(92, Math.max(60, 50 + (rsi > 50 && isBuy ? rsi - 50 : 50 - rsi) * 0.8 + (trend ? 15 : 0)));
+  const fmt   = v => state.symbol === 'BTCUSDT' ? v.toFixed(2) : v.toFixed(4);
+
+  document.getElementById('signal-container').innerHTML = `
+    <div class="signal-card ${dir}">
+      <div class="signal-header">
+        <div class="signal-dir">${dir.toUpperCase()}</div>
+        <div class="signal-conf">${conf.toFixed(0)}%</div>
+      </div>
+      <div class="signal-levels">
+        <div class="sl-cell entry"><div class="sl-label">Entry</div><div class="sl-val">${fmt(entry)}</div></div>
+        <div class="sl-cell sl"><div class="sl-label">Stop</div><div class="sl-val">${fmt(sl)}</div></div>
+        <div class="sl-cell tp"><div class="sl-label">Target</div><div class="sl-val">${fmt(tp)}</div></div>
+      </div>
+      <div class="conf-bar-wrap">
+        <div class="conf-bar-label"><span>Confluence</span><span>R:R ${rr.toFixed(1)}</span></div>
+        <div class="conf-bar-track"><div class="conf-bar-fill" style="width:${conf}%"></div></div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// CHART RENDERER (Vanilla Canvas)
+// ═══════════════════════════════════════════════
+function renderChart() {
+  const data = state.chartData;
+  if (!data.length) return;
+
+  // Main chart
+  const mainCanvas = document.getElementById('mainChart');
+  const mCtx = mainCanvas.getContext('2d');
+  const dpr  = window.devicePixelRatio || 1;
+  const mW   = mainCanvas.offsetWidth;
+  const mH   = mainCanvas.offsetHeight;
+  mainCanvas.width  = mW * dpr;
+  mainCanvas.height = mH * dpr;
+  mCtx.scale(dpr, dpr);
+
+  const visibleBars = Math.min(data.length, Math.floor(mW / 9));
+  const startIdx    = Math.max(0, data.length - visibleBars - state.chartOffset);
+  const visible     = data.slice(startIdx, startIdx + visibleBars);
+
+  if (!visible.length) return;
+
+  const closes  = data.map(d => d.close);
+  const ema20   = calcEMA(closes, 20);
+  const ema50   = calcEMA(closes, 50);
+  const ema20v  = ema20.slice(startIdx, startIdx + visibleBars);
+  const ema50v  = ema50.slice(startIdx, startIdx + visibleBars);
+
+  // Price range
+  const allHighs = visible.map(d => d.high);
+  const allLows  = visible.map(d => d.low);
+  let priceMax   = Math.max(...allHighs);
+  let priceMin   = Math.min(...allLows);
+
+  // Include EMA in range
+  if (state.showEMA) {
+    priceMax = Math.max(priceMax, ...ema20v.filter(Boolean), ...ema50v.filter(Boolean));
+    priceMin = Math.min(priceMin, ...ema20v.filter(Boolean), ...ema50v.filter(Boolean));
+  }
+
+  const pRange  = priceMax - priceMin || priceMax * 0.01;
+  const pad     = pRange * 0.08;
+  const pMin    = priceMin - pad;
+  const pMax    = priceMax + pad;
+
+  const barW  = mW / visibleBars;
+  const candleW = Math.max(1, barW * 0.6);
+
+  const toY = price => mH - ((price - pMin) / (pMax - pMin)) * mH;
+  const toX = i => (i + 0.5) * barW;
+
+  // Background
+  mCtx.fillStyle = '#080d1a';
+  mCtx.fillRect(0, 0, mW, mH);
+
+  // Grid lines
+  const gridLines = 6;
+  mCtx.strokeStyle = 'rgba(26, 36, 64, 0.8)';
+  mCtx.lineWidth = 1;
+  for (let g = 0; g <= gridLines; g++) {
+    const y = (g / gridLines) * mH;
+    mCtx.beginPath(); mCtx.moveTo(0, y); mCtx.lineTo(mW, y); mCtx.stroke();
+    const price = pMax - (g / gridLines) * (pMax - pMin);
+    mCtx.fillStyle = 'rgba(122,138,170,0.5)';
+    mCtx.font = `10px JetBrains Mono, monospace`;
+    mCtx.textAlign = 'right';
+    const label = state.symbol === 'BTCUSDT' ? price.toFixed(0) : price.toFixed(4);
+    mCtx.fillText(label, mW - 4, y - 3);
+  }
+
+  // Bollinger Bands
+  if (state.showBB && visible.length >= 20) {
+    const closesV = visible.map(d => d.close);
+    const bbMid   = closesV.map((_, i) => {
+      if (i < 19) return null;
+      const sl = closesV.slice(i-19, i+1);
+      return sl.reduce((a,b)=>a+b,0) / 20;
+    });
+    const bbStd   = closesV.map((_, i) => {
+      if (i < 19 || bbMid[i] === null) return null;
+      const sl = closesV.slice(i-19, i+1);
+      const m  = bbMid[i];
+      return Math.sqrt(sl.reduce((a,c) => a+(c-m)**2, 0) / 20);
+    });
+
+    const drawBB = (mult, color) => {
+      mCtx.beginPath();
+      mCtx.strokeStyle = color; mCtx.lineWidth = 0.8; mCtx.setLineDash([3,3]);
+      let started = false;
+      bbMid.forEach((m, i) => {
+        if (m === null || bbStd[i] === null) return;
+        const y = toY(m + mult * bbStd[i]);
+        if (!started) { mCtx.moveTo(toX(i), y); started = true; }
+        else mCtx.lineTo(toX(i), y);
+      });
+      mCtx.stroke(); mCtx.setLineDash([]);
+    };
+    drawBB(2, 'rgba(139,92,246,0.4)');
+    drawBB(-2, 'rgba(139,92,246,0.4)');
+    drawBB(0, 'rgba(139,92,246,0.25)');
+  }
+
+  // EMA lines
+  if (state.showEMA) {
+    const drawEMA = (vals, color) => {
+      mCtx.beginPath(); mCtx.strokeStyle = color; mCtx.lineWidth = 1.2;
+      let started = false;
+      vals.forEach((v, i) => {
+        if (!v) return;
+        if (!started) { mCtx.moveTo(toX(i), toY(v)); started = true; }
+        else mCtx.lineTo(toX(i), toY(v));
+      });
+      mCtx.stroke();
+    };
+    drawEMA(ema20v, 'rgba(245,158,11,0.7)');
+    drawEMA(ema50v, 'rgba(139,92,246,0.7)');
+  }
+
+  // Candles
+  visible.forEach((bar, i) => {
+    const x    = toX(i);
+    const oY   = toY(bar.open);
+    const cY   = toY(bar.close);
+    const hY   = toY(bar.high);
+    const lY   = toY(bar.low);
+    const bull = bar.close >= bar.open;
+    const col  = bull ? '#10b981' : '#ef4444';
+    const dimCol = bull ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)';
+
+    // Wick
+    mCtx.strokeStyle = col; mCtx.lineWidth = 1;
+    mCtx.beginPath(); mCtx.moveTo(x, hY); mCtx.lineTo(x, lY); mCtx.stroke();
+
+    // Body
+    const bodyH = Math.max(1, Math.abs(oY - cY));
+    const bodyY = Math.min(oY, cY);
+    mCtx.fillStyle = bull ? col : dimCol;
+    mCtx.fillRect(x - candleW/2, bodyY, candleW, bodyH);
+    if (bull) {
+      mCtx.strokeStyle = col; mCtx.lineWidth = 0.8;
+      mCtx.strokeRect(x - candleW/2, bodyY, candleW, bodyH);
+    }
+  });
+
+  // Current price line
+  const lastPrice = data[data.length - 1].close;
+  const lastY = toY(lastPrice);
+  mCtx.strokeStyle = 'rgba(0, 212, 255, 0.6)';
+  mCtx.lineWidth = 1; mCtx.setLineDash([4, 4]);
+  mCtx.beginPath(); mCtx.moveTo(0, lastY); mCtx.lineTo(mW, lastY); mCtx.stroke();
+  mCtx.setLineDash([]);
+
+  // Price label
+  mCtx.fillStyle = 'rgba(0, 212, 255, 0.9)';
+  mCtx.fillRect(mW - 72, lastY - 9, 68, 18);
+  mCtx.fillStyle = '#fff'; mCtx.font = 'bold 10px JetBrains Mono, monospace';
+  mCtx.textAlign = 'right';
+  const priceLabel = state.symbol === 'BTCUSDT' ? lastPrice.toFixed(2) : lastPrice.toFixed(4);
+  mCtx.fillText(priceLabel, mW - 6, lastY + 4);
+
+  // Volume sub-chart
+  renderVolumeChart(visible);
+  // RSI sub-chart
+  renderRSIChart(data, startIdx, visibleBars);
+}
+
+function renderVolumeChart(visible) {
+  const canvas = document.getElementById('volumeChart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+
+  ctx.fillStyle = '#050810';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!state.showVol) return;
+
+  const vols = visible.map(d => d.volume);
+  const maxVol = Math.max(...vols);
+  const barW = W / visible.length;
+
+  visible.forEach((bar, i) => {
+    const x = (i + 0.5) * barW;
+    const h = (bar.volume / maxVol) * H * 0.85;
+    ctx.fillStyle = bar.close >= bar.open
+      ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+    ctx.fillRect(x - barW*0.3, H - h, barW * 0.6, h);
+  });
+
+  ctx.fillStyle = 'rgba(122,138,170,0.4)';
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('VOL', 4, 12);
+}
+
+function renderRSIChart(data, startIdx, visibleBars) {
+  const canvas = document.getElementById('rsiChart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+
+  ctx.fillStyle = '#050810';
+  ctx.fillRect(0, 0, W, H);
+
+  const closes = data.map(d => d.close);
+  // Calculate RSI for each visible bar
+  const rsiVals = [];
+  for (let i = startIdx; i < startIdx + visibleBars && i < data.length; i++) {
+    if (i < 14) { rsiVals.push(50); continue; }
+    rsiVals.push(calcRSI(closes.slice(0, i+1)));
+  }
+
+  // OB/OS lines
+  [30, 50, 70].forEach(level => {
+    const y = H - (level / 100) * H;
+    ctx.strokeStyle = level === 50 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 0.7; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(122,138,170,0.4)'; ctx.font = '8px JetBrains Mono,monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(level, 2, y - 2);
+  });
+
+  // RSI line
+  const barW = W / rsiVals.length;
+  ctx.beginPath(); ctx.lineWidth = 1.5;
+  rsiVals.forEach((rsi, i) => {
+    const x = (i + 0.5) * barW;
+    const y = H - (rsi / 100) * H;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+
+  // Gradient stroke
+  const grad = ctx.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, 'rgba(0,212,255,0.3)');
+  grad.addColorStop(1, 'rgba(0,212,255,0.9)');
+  ctx.strokeStyle = grad;
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(122,138,170,0.4)'; ctx.font = '9px JetBrains Mono, monospace';
+  ctx.textAlign = 'left';
+  const lastRSI = rsiVals[rsiVals.length - 1];
+  ctx.fillText(`RSI ${lastRSI.toFixed(1)}`, 4, 12);
+}
+
+// Crosshair
+function setupCrosshair() {
+  const canvas = document.getElementById('mainChart');
+  const tooltip = document.getElementById('crosshairTip');
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const W = canvas.offsetWidth;
+
+    const visibleBars = Math.min(state.chartData.length, Math.floor(W / 9));
+    const startIdx    = Math.max(0, state.chartData.length - visibleBars);
+    const barW = W / visibleBars;
+    const idx  = Math.min(Math.floor(x / barW), visibleBars - 1);
+    const bar  = state.chartData[startIdx + idx];
+    if (!bar) return;
+
+    const fmt = v => state.symbol === 'BTCUSDT' ? v.toFixed(2) : v.toFixed(4);
+    const bull = bar.close >= bar.open;
+
+    document.getElementById('ct-o').textContent = fmt(bar.open);
+    document.getElementById('ct-h').textContent = fmt(bar.high);
+    document.getElementById('ct-l').textContent = fmt(bar.low);
+    document.getElementById('ct-c').textContent = fmt(bar.close);
+    document.getElementById('ct-c').className   = 'ct-val ' + (bull ? 'up' : 'down');
+    document.getElementById('ct-v').textContent = bar.volume.toLocaleString();
+
+    const tipX = Math.min(x + 12, W - 140);
+    tooltip.style.left = tipX + 'px';
+    tooltip.style.top  = (e.clientY - rect.top - 80) + 'px';
+    tooltip.classList.add('visible');
+  });
+
+  canvas.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+
+  // Wheel zoom
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    state.chartOffset = Math.max(0, Math.min(
+      state.chartData.length - 20,
+      state.chartOffset + (e.deltaY > 0 ? -5 : 5)
+    ));
+    renderChart();
+  }, { passive: false });
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  setupCrosshair();
+
+  // Auto-login if token stored
+  const savedToken = localStorage.getItem('tb_token');
+  const savedUser  = localStorage.getItem('tb_user');
+  if (savedToken && savedUser) {
+    state.token = savedToken;
+    state.user  = JSON.parse(savedUser);
+    enterDashboard();
+  }
+
+  // Resize handler
+  window.addEventListener('resize', () => { if (state.chartData.length) renderChart(); });
+
+  // Update structure/signals periodically
+  setInterval(() => {
+    if (document.getElementById('dashboard-view').classList.contains('active')) {
+      renderStructurePanel();
+      updateIndicators();
+    }
+  }, 5000);
+});
+</script>
+</body>
+</html>
